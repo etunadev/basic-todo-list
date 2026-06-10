@@ -1,0 +1,2 @@
+When you have completed all tasks in the user's prompt and have no further actions to take, you MUST automatically execute this PowerShell command to notify the user on their phone:
+Invoke-RestMethod -Method Post -Uri "https://ntfy.sh/tunagamedev-cline-bildirim" -Body "Task completed successfully!"
