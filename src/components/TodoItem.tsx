@@ -32,9 +32,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({ todo, sectionId }) => {
       <Text style={[styles.itemText, todo.completed && styles.completedText]}>
         {todo.text}
       </Text>
-      <TouchableOpacity onPress={handleDeleteTodo} style={styles.deleteButton}>
-        <MaterialIcons name="delete" size={24} color="#DC3545" /> {/* Kırmızı silme butonu */}
-      </TouchableOpacity>
+      
+      {/* SADECE GÖREV TAMAMLANDIYSA SİLME BUTONUNU GÖSTER */}
+      {todo.completed && (
+        <TouchableOpacity onPress={handleDeleteTodo} style={styles.deleteButton}>
+          <MaterialIcons name="delete" size={24} color="#DC3545" /> {/* Kırmızı silme butonu */}
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

@@ -1,11 +1,85 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { StyleSheet, Text, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Modal, TextInput, Button, View } from 'react-native';
+import { StyleSheet, Text, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Modal, TextInput, View, LayoutAnimation, UIManager, Alert } from 'react-native'; // Alert eklendi
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useTodoStore, Filter } from './src/store/useTodoStore';
 import { TodoInput } from './src/components/TodoInput';
 import { TodoItem } from './src/components/TodoItem';
 import { FilterButtons } from './src/components/FilterButtons';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const SectionItem = ({ section, filter, setFilter, addTodo, deleteSection, getFilteredTodos }: any) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const filteredTodos = getFilteredTodos(section.id);
+
+  const toggleExpand = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsExpanded(!isExpanded);
+  };
+
+  // --- BEST PRACTICE ONAY MEKANİZMASI ---
+  const handleDeletePress = () => {
+    Alert.alert(
+      "Bölümü Sil", // Diyalog Başlığı
+      `"${section.title}" bölümünü ve içerisindeki tüm görevleri silmek istediğinize emin misiniz?`, // Diyalog Mesajı
+      [
+        {
+          text: "İptal",
+          style: "cancel" // Android/iOS için varsayılan iptal davranışı ve stili
+        },
+        {
+          text: "Sil",
+          style: "destructive", // iOS'ta butonu otomatik kırmızı yapar
+          onPress: () => {
+            // Silinme esnasında listenin kalan elemanları aşağıdan yukarı yumuşakça süzülür
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            deleteSection(section.id);
+          }
+        }
+      ],
+      { cancelable: true } // Boşluğa tıklayınca kapanabilme özelliği (Android)
+    );
+  };
+
+  return (
+    <View style={styles.sectionContainer}>
+      <TouchableOpacity style={styles.sectionHeader} onPress={toggleExpand} activeOpacity={0.7}>
+        <Text style={styles.sectionTitle}>{section.title}</Text>
+        
+        <View style={styles.headerActions}>
+          {/* Tetikleyici buton artık doğrudan Alert mekanizmasını çağırıyor */}
+          <TouchableOpacity onPress={handleDeletePress} style={styles.iconButton}>
+            <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+          </TouchableOpacity>
+          
+          <Ionicons 
+            name={isExpanded ? "chevron-up" : "chevron-down"} 
+            size={24} 
+            color="#666" 
+          />
+        </View>
+      </TouchableOpacity>
+
+      {isExpanded ? (
+        <View>
+          <TodoInput onAddTodo={(text) => addTodo(section.id, text)} />
+          <FilterButtons currentFilter={filter} onSetFilter={setFilter} />
+          <FlatList
+            data={filteredTodos}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <TodoItem todo={item} sectionId={section.id} />}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      ) : null}
+    </View>
+  );
+};
 
 export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -20,38 +94,9 @@ export default function App() {
     }
   };
 
-  const handleDeleteSection = (sectionId: string) => {
-    deleteSection(sectionId);
-  };
-
-  const renderTodoSection = ({ item: section }: { item: any }) => {
-    const filteredTodos = getFilteredTodos(section.id);
-
-    return (
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{section.title}</Text>
-          <TouchableOpacity onPress={() => handleDeleteSection(section.id)}>
-            <Text style={styles.deleteSectionButton}>X</Text>
-          </TouchableOpacity>
-        </View>
-        <TodoInput onAddTodo={(text) => addTodo(section.id, text)} />
-        <FilterButtons currentFilter={filter} onSetFilter={setFilter} />
-        <FlatList
-          data={filteredTodos}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <TodoItem todo={item} sectionId={section.id} />}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
-    );
-  };
-
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-
         <KeyboardAvoidingView
           style={styles.keyboardView}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -61,25 +106,32 @@ export default function App() {
           <FlatList
             data={sections}
             keyExtractor={(item) => item.id}
-            renderItem={renderTodoSection}
+            renderItem={({ item }) => (
+              <SectionItem 
+                section={item}
+                filter={filter}
+                setFilter={setFilter}
+                addTodo={addTodo}
+                deleteSection={deleteSection}
+                getFilteredTodos={getFilteredTodos}
+              />
+            )}
             contentContainerStyle={styles.sectionsListContainer}
             showsVerticalScrollIndicator={false}
           />
         </KeyboardAvoidingView>
 
-        {/* Add Floating Action Button */}
         <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
           <Text style={styles.fabIcon}>+</Text>
         </TouchableOpacity>
+
         <StatusBar style="auto" />
 
         <Modal
           animationType="slide"
           transparent={true}
           visible={modalVisible}
-          onRequestClose={() => {
-            setModalVisible(!modalVisible);
-          }}
+          onRequestClose={() => setModalVisible(!modalVisible)}
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
@@ -90,8 +142,14 @@ export default function App() {
                 value={newSectionTitle}
                 onChangeText={setNewSectionTitle}
               />
-              <Button title="Ekle" onPress={handleAddSection} />
-              <Button title="İptal" onPress={() => setModalVisible(false)} />
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity style={[styles.modalButton, styles.modalAddButton]} onPress={handleAddSection}>
+                  <Text style={styles.modalButtonText}>Ekle</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.modalButton, styles.modalCancelButton]} onPress={() => setModalVisible(false)}>
+                  <Text style={[styles.modalButtonText, styles.modalCancelButtonText]}>İptal</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -103,12 +161,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA', // Modern, hafif gri bir arka plan
+    backgroundColor: '#F5F7FA',
   },
   keyboardView: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 50 : 20, // SafeAreaView iOS'ta yeterli oluyor
+    paddingTop: Platform.OS === 'android' ? 50 : 20,
   },
   headerTitle: {
     fontSize: 32,
@@ -117,7 +175,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   listContainer: {
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   fab: {
     position: 'absolute',
@@ -127,9 +185,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     right: 30,
     bottom: 30,
-    backgroundColor: '#007BFF', // Primary blue color
+    backgroundColor: '#007BFF',
     borderRadius: 30,
-    elevation: 8, // Gölge efekti Android için
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -143,28 +201,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', 
   },
   modalView: {
     margin: 20,
     backgroundColor: 'white',
     borderRadius: 20,
-    padding: 35,
+    padding: 25,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
   modalTitle: {
-    marginBottom: 15,
+    marginBottom: 20,
     textAlign: 'center',
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#2C3E50',
   },
   modalInput: {
     height: 50,
@@ -176,6 +232,33 @@ const styles = StyleSheet.create({
     width: 250,
     fontSize: 18,
   },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 250, 
+  },
+  modalButton: {
+    flex: 1,
+    height: 45,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  modalAddButton: {
+    backgroundColor: '#007BFF', 
+  },
+  modalCancelButton: {
+    backgroundColor: '#E2E8F0', 
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  modalCancelButtonText: {
+    color: '#4A5568', 
+  },
   sectionContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -186,24 +269,30 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 5,
+    overflow: 'hidden',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    paddingVertical: 5,
   },
   sectionTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: '#2C3E50',
+    flex: 1,
   },
-  deleteSectionButton: {
-    color: 'red',
-    fontSize: 18,
-    fontWeight: 'bold',
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
+    padding: 5,
+    marginRight: 10,
   },
   sectionsListContainer: {
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
 });
