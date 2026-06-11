@@ -2,28 +2,31 @@ import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useTodoStore, Filter } from "../store/useTodoStore";
 
-export const FilterButtons = () => {
-  const { filter, setFilter } = useTodoStore();
+interface FilterButtonsProps {
+  onSetFilter: (filter: Filter) => void;
+  currentFilter: Filter;
+}
 
+export const FilterButtons: React.FC<FilterButtonsProps> = ({ onSetFilter, currentFilter }) => {
   return (
     <View style={styles.filterContainer}>
       <TouchableOpacity
-        style={[styles.filterButton, filter === Filter.All && styles.activeFilterButton]}
-        onPress={() => setFilter(Filter.All)}
+        style={[styles.filterButton, currentFilter === Filter.All && styles.activeFilterButton]}
+        onPress={() => onSetFilter(Filter.All)}
       >
-        <Text style={[styles.filterButtonText, filter === Filter.All && styles.activeFilterButtonText]}>Tümü</Text>
+        <Text style={[styles.filterButtonText, currentFilter === Filter.All && styles.activeFilterButtonText]}>Tümü</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.filterButton, filter === Filter.Active && styles.activeFilterButton]}
-        onPress={() => setFilter(Filter.Active)}
+        style={[styles.filterButton, currentFilter === Filter.Active && styles.activeFilterButton]}
+        onPress={() => onSetFilter(Filter.Active)}
       >
-        <Text style={[styles.filterButtonText, filter === Filter.Active && styles.activeFilterButtonText]}>Aktif</Text>
+        <Text style={[styles.filterButtonText, currentFilter === Filter.Active && styles.activeFilterButtonText]}>Aktif</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.filterButton, filter === Filter.Completed && styles.activeFilterButton]}
-        onPress={() => setFilter(Filter.Completed)}
+        style={[styles.filterButton, currentFilter === Filter.Completed && styles.activeFilterButton]}
+        onPress={() => onSetFilter(Filter.Completed)}
       >
-        <Text style={[styles.filterButtonText, filter === Filter.Completed && styles.activeFilterButtonText]}>Tamamlanan</Text>
+        <Text style={[styles.filterButtonText, currentFilter === Filter.Completed && styles.activeFilterButtonText]}>Tamamlanan</Text>
       </TouchableOpacity>
     </View>
   );

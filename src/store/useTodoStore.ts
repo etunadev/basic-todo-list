@@ -8,6 +8,12 @@ interface Todo {
   completed: boolean;
 }
 
+interface TodoSection {
+  id: string;
+  title: string;
+  todos: Todo[];
+}
+
 enum Filter {
   All = "all",
   Active = "active",
@@ -15,44 +21,78 @@ enum Filter {
 }
 
 interface TodoStore {
-  todos: Todo[];
+  sections: TodoSection[];
   filter: Filter;
-  addTodo: (text: string) => void;
-  deleteTodo: (id: string) => void;
-  toggleTodo: (id: string) => void;
+  addSection: (title: string) => void;
+  deleteSection: (sectionId: string) => void;
+  addTodo: (sectionId: string, text: string) => void;
+  deleteTodo: (sectionId: string, todoId: string) => void;
+  toggleTodo: (sectionId: string, todoId: string) => void;
   setFilter: (filter: Filter) => void;
-  getFilteredTodos: () => Todo[];
+  getFilteredTodos: (sectionId: string) => Todo[];
 }
 
 const useTodoStore = create<TodoStore>()(
   persist(
     (set, get) => ({
-      todos: [],
+      sections: [],
       filter: Filter.All,
-      addTodo: (text) =>
+      addSection: (title) =>
         set((state) => ({
-          todos: [...state.todos, { id: Date.now().toString(), text, completed: false }],
+          sections: [...state.sections, { id: Date.now().toString(), title, todos: [] }],
         })),
-      deleteTodo: (id) =>
+      deleteSection: (sectionId) =>
         set((state) => ({
-          todos: state.todos.filter((todo) => todo.id !== id),
+          sections: state.sections.filter((section) => section.id !== sectionId),
         })),
-      toggleTodo: (id) =>
+      addTodo: (sectionId, text) =>
         set((state) => ({
-          todos: state.todos.map((todo) =>
-            todo.id === id ? { ...todo, completed: !todo.completed } : todo
+          sections: state.sections.map((section) =>
+            section.id === sectionId
+              ? {
+                  ...section,
+                  todos: [...section.todos, { id: Date.now().toString(), text, completed: false }],
+                }
+              : section
+          ),
+        })),
+      deleteTodo: (sectionId, todoId) =>
+        set((state) => ({
+          sections: state.sections.map((section) =>
+            section.id === sectionId
+              ? {
+                  ...section,
+                  todos: section.todos.filter((todo) => todo.id !== todoId),
+                }
+              : section
+          ),
+        })),
+      toggleTodo: (sectionId, todoId) =>
+        set((state) => ({
+          sections: state.sections.map((section) =>
+            section.id === sectionId
+              ? {
+                  ...section,
+                  todos: section.todos.map((todo) =>
+                    todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
+                  ),
+                }
+              : section
           ),
         })),
       setFilter: (filter) => set({ filter }),
-      getFilteredTodos: () => {
-        const { todos, filter } = get();
+      getFilteredTodos: (sectionId) => {
+        const { sections, filter } = get();
+        const section = sections.find((s) => s.id === sectionId);
+        if (!section) return [];
+
         switch (filter) {
           case Filter.Active:
-            return todos.filter((todo) => !todo.completed);
+            return section.todos.filter((todo) => !todo.completed);
           case Filter.Completed:
-            return todos.filter((todo) => todo.completed);
+            return section.todos.filter((todo) => todo.completed);
           default:
-            return todos;
+            return section.todos;
         }
       },
     }),
@@ -63,4 +103,4 @@ const useTodoStore = create<TodoStore>()(
   )
 );
 
-export { useTodoStore, Filter, Todo };
+export { useTodoStore, Filter, Todo, TodoSection };

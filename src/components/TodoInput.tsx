@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet, Text } from "react-native";
-import { useTodoStore } from "../store/useTodoStore";
+import { useTodoStore, TodoSection } from "../store/useTodoStore";
 
-export const TodoInput = () => {
+interface TodoInputProps {
+  onAddTodo: (text: string) => void;
+}
+
+export const TodoInput: React.FC<TodoInputProps> = ({ onAddTodo }) => {
   const [todoText, setTodoText] = useState("");
-  const addTodo = useTodoStore((state) => state.addTodo);
 
   const handleAddTodo = () => {
     if (todoText.trim()) {
-      addTodo(todoText);
+      onAddTodo(todoText);
       setTodoText("");
     }
   };

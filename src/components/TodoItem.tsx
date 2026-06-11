@@ -5,15 +5,24 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 interface TodoItemProps {
   todo: Todo;
+  sectionId: string;
 }
 
-export const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
+export const TodoItem: React.FC<TodoItemProps> = ({ todo, sectionId }) => {
   const toggleTodo = useTodoStore((state) => state.toggleTodo);
   const deleteTodo = useTodoStore((state) => state.deleteTodo);
 
+  const handleToggleTodo = () => {
+    toggleTodo(sectionId, todo.id);
+  };
+
+  const handleDeleteTodo = () => {
+    deleteTodo(sectionId, todo.id);
+  };
+
   return (
     <View style={styles.itemContainer}>
-      <TouchableOpacity onPress={() => toggleTodo(todo.id)} style={styles.checkboxContainer}>
+      <TouchableOpacity onPress={handleToggleTodo} style={styles.checkboxContainer}>
         <MaterialIcons
           name={todo.completed ? "check-circle" : "radio-button-unchecked"}
           size={24}
@@ -23,7 +32,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
       <Text style={[styles.itemText, todo.completed && styles.completedText]}>
         {todo.text}
       </Text>
-      <TouchableOpacity onPress={() => deleteTodo(todo.id)} style={styles.deleteButton}>
+      <TouchableOpacity onPress={handleDeleteTodo} style={styles.deleteButton}>
         <MaterialIcons name="delete" size={24} color="#DC3545" /> {/* Kırmızı silme butonu */}
       </TouchableOpacity>
     </View>

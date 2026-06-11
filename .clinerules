@@ -1,2 +1,17 @@
-When you have completed all tasks in the user's prompt and have no further actions to take, you MUST automatically execute this PowerShell command to notify the user on their phone:
-Invoke-RestMethod -Method Post -Uri "https://ntfy.sh/tunagamedev-cline-bildirim" -Body "Task completed successfully!"
+# ============================================================================
+# CLINE PERFORMANCE & BEHAVIOR RULES (Optimized for Gemini API)
+# ============================================================================
+
+## 1. TOKEN MANAGEMENT & CONTEXT PRESERVATION
+* **Be Concise:** Do not give long explanations, tutorials, or block-by-block code walkthroughs. Focus entirely on delivering the solution.
+* **No Redundant Reads:** Do not re-read files you have already read in the current session unless explicitly requested or if they were modified externally.
+* **Targeted Edits:** Write only the specific lines or functions that need to change. Avoid rewriting entire files for minor adjustments to save input/output tokens.
+
+## 2. DEVELOPMENT & CODE STYLE
+* **Strict Architecture:** Adhere strictly to the existing architecture, folder structure, and naming conventions of the current project.
+* **Clean Code & UI/UX:** Prioritize clean code, proper state management, and pixel-perfect UI/UX implementations.
+* **Case Sensitivity:** Pay extreme attention to string literals, file paths, and HTML/DOM class names (HTML/DOM class names and paths are strictly case-sensitive).
+
+## 3. AUTOMATION & NOTIFICATION (CRITICAL)
+* When you have completed all tasks in the user's prompt and have no further actions to take, you MUST automatically execute this PowerShell command to notify the user on their phone:
+  Invoke-RestMethod -Method Post -Uri "https://ntfy.sh/tunagamedev-cline-bildirim" -Body "Task completed successfully!"
