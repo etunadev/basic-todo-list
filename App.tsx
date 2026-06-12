@@ -5,6 +5,7 @@ import { StyleSheet, Text, FlatList, KeyboardAvoidingView, Platform, TouchableOp
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next'; // Çeviri kancası eklendi
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { useTodoStore, Filter } from './src/store/useTodoStore';
 import { TodoInput } from './src/components/TodoInput';
 import { TodoItem } from './src/components/TodoItem';
@@ -130,6 +131,19 @@ export default function App() {
           <Text style={styles.fabIcon}>+</Text>
         </TouchableOpacity>
 
+        {/* --- YENİ EKLENEN ADMOB BANNER ALANI --- */}
+        <View style={styles.adContainer}>
+          <BannerAd
+            // Geliştirme ortamındaysa Test ID'si, canlıdaysa .env'den gelen ID'yi kullanır
+            unitId={__DEV__ ? TestIds.BANNER : process.env.EXPO_PUBLIC_ADMOB_BANNER_ID || ''}
+            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+            requestOptions={{
+              requestNonPersonalizedAdsOnly: true,
+            }}
+          />
+        </View>
+        {/* --------------------------------------- */}
+
         <StatusBar style="auto" />
 
         <Modal
@@ -182,6 +196,13 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingBottom: 20,
   },
+
+  adContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingBottom: Platform.OS === 'ios' ? 10 : 0, // iOS'ta alttan biraz boşluk bırakmak iyi görünür
+  },
   fab: {
     position: 'absolute',
     width: 60,
@@ -189,7 +210,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     right: 30,
-    bottom: 30,
+    bottom: 100,
     backgroundColor: '#007BFF',
     borderRadius: 30,
     elevation: 8,
