@@ -1,8 +1,10 @@
+import './src/localization/i18n'; // i18n başlatıcısını import ediyoruz
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { StyleSheet, Text, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Modal, TextInput, View, LayoutAnimation, UIManager, Alert } from 'react-native'; // Alert eklendi
+import { StyleSheet, Text, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, Modal, TextInput, View, LayoutAnimation, UIManager, Alert } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next'; // Çeviri kancası eklendi
 import { useTodoStore, Filter } from './src/store/useTodoStore';
 import { TodoInput } from './src/components/TodoInput';
 import { TodoItem } from './src/components/TodoItem';
@@ -12,36 +14,38 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const SectionItem = ({ section, filter, setFilter, addTodo, deleteSection, getFilteredTodos }: any) => {
+const SectionItem = ({ section, addTodo, deleteSection, getFilteredTodos }: any) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const filteredTodos = getFilteredTodos(section.id);
+
+  const [localFilter, setLocalFilter] = useState<Filter>(Filter.All);
+  const { t } = useTranslation();
+
+  const filteredTodos = getFilteredTodos(section.id, localFilter);
 
   const toggleExpand = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsExpanded(!isExpanded);
   };
 
-  // --- BEST PRACTICE ONAY MEKANİZMASI ---
   const handleDeletePress = () => {
     Alert.alert(
-      "Bölümü Sil", // Diyalog Başlığı
-      `"${section.title}" bölümünü ve içerisindeki tüm görevleri silmek istediğinize emin misiniz?`, // Diyalog Mesajı
+      t('section_delete_title'),
+      t('section_delete_message', { sectionTitle: section.title }), // Dinamik başlık çevirisi
       [
         {
-          text: "İptal",
-          style: "cancel" // Android/iOS için varsayılan iptal davranışı ve stili
+          text: t('cancel'),
+          style: "cancel"
         },
         {
-          text: "Sil",
-          style: "destructive", // iOS'ta butonu otomatik kırmızı yapar
+          text: t('delete'),
+          style: "destructive",
           onPress: () => {
-            // Silinme esnasında listenin kalan elemanları aşağıdan yukarı yumuşakça süzülür
             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
             deleteSection(section.id);
           }
         }
       ],
-      { cancelable: true } // Boşluğa tıklayınca kapanabilme özelliği (Android)
+      { cancelable: true }
     );
   };
 
@@ -49,17 +53,16 @@ const SectionItem = ({ section, filter, setFilter, addTodo, deleteSection, getFi
     <View style={styles.sectionContainer}>
       <TouchableOpacity style={styles.sectionHeader} onPress={toggleExpand} activeOpacity={0.7}>
         <Text style={styles.sectionTitle}>{section.title}</Text>
-        
+
         <View style={styles.headerActions}>
-          {/* Tetikleyici buton artık doğrudan Alert mekanizmasını çağırıyor */}
           <TouchableOpacity onPress={handleDeletePress} style={styles.iconButton}>
             <Ionicons name="trash-outline" size={22} color="#FF3B30" />
           </TouchableOpacity>
-          
-          <Ionicons 
-            name={isExpanded ? "chevron-up" : "chevron-down"} 
-            size={24} 
-            color="#666" 
+
+          <Ionicons
+            name={isExpanded ? "chevron-up" : "chevron-down"}
+            size={24}
+            color="#666"
           />
         </View>
       </TouchableOpacity>
@@ -67,7 +70,10 @@ const SectionItem = ({ section, filter, setFilter, addTodo, deleteSection, getFi
       {isExpanded ? (
         <View>
           <TodoInput onAddTodo={(text) => addTodo(section.id, text)} />
-          <FilterButtons currentFilter={filter} onSetFilter={setFilter} />
+
+          {/* FİLTRE BUTONLARINA ARTIK YEREL DURUMLARI GÖNDERİYORUZ */}
+          <FilterButtons currentFilter={localFilter} onSetFilter={setLocalFilter} />
+
           <FlatList
             data={filteredTodos}
             keyExtractor={(item) => item.id}
@@ -84,7 +90,8 @@ const SectionItem = ({ section, filter, setFilter, addTodo, deleteSection, getFi
 export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
-  const { sections, filter, addSection, deleteSection, getFilteredTodos, addTodo, setFilter } = useTodoStore();
+  const { t } = useTranslation();
+  const { sections, addSection, deleteSection, getFilteredTodos, addTodo } = useTodoStore();
 
   const handleAddSection = () => {
     if (newSectionTitle.trim()) {
@@ -101,16 +108,14 @@ export default function App() {
           style={styles.keyboardView}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <Text style={styles.headerTitle}>Görevlerim</Text>
+          <Text style={styles.headerTitle}>{t('my_tasks')}</Text>
 
           <FlatList
             data={sections}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <SectionItem 
+              <SectionItem
                 section={item}
-                filter={filter}
-                setFilter={setFilter}
                 addTodo={addTodo}
                 deleteSection={deleteSection}
                 getFilteredTodos={getFilteredTodos}
@@ -135,19 +140,19 @@ export default function App() {
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Text style={styles.modalTitle}>Yeni Bölüm Ekle</Text>
+              <Text style={styles.modalTitle}>{t('add_new_section')}</Text>
               <TextInput
                 style={styles.modalInput}
-                placeholder="Bölüm Başlığı"
+                placeholder={t('section_title_placeholder')}
                 value={newSectionTitle}
                 onChangeText={setNewSectionTitle}
               />
               <View style={styles.modalButtonContainer}>
                 <TouchableOpacity style={[styles.modalButton, styles.modalAddButton]} onPress={handleAddSection}>
-                  <Text style={styles.modalButtonText}>Ekle</Text>
+                  <Text style={styles.modalButtonText}>{t('add')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.modalButton, styles.modalCancelButton]} onPress={() => setModalVisible(false)}>
-                  <Text style={[styles.modalButtonText, styles.modalCancelButtonText]}>İptal</Text>
+                  <Text style={[styles.modalButtonText, styles.modalCancelButtonText]}>{t('cancel')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -201,7 +206,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', 
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   modalView: {
     margin: 20,
@@ -235,7 +240,7 @@ const styles = StyleSheet.create({
   modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: 250, 
+    width: 250,
   },
   modalButton: {
     flex: 1,
@@ -246,10 +251,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   modalAddButton: {
-    backgroundColor: '#007BFF', 
+    backgroundColor: '#007BFF',
   },
   modalCancelButton: {
-    backgroundColor: '#E2E8F0', 
+    backgroundColor: '#E2E8F0',
   },
   modalButtonText: {
     fontSize: 16,
@@ -257,7 +262,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   modalCancelButtonText: {
-    color: '#4A5568', 
+    color: '#4A5568',
   },
   sectionContainer: {
     backgroundColor: '#FFFFFF',

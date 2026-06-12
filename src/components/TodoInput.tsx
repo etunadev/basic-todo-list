@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useTodoStore, TodoSection } from "../store/useTodoStore";
 
 interface TodoInputProps {
@@ -8,6 +9,7 @@ interface TodoInputProps {
 
 export const TodoInput: React.FC<TodoInputProps> = ({ onAddTodo }) => {
   const [todoText, setTodoText] = useState("");
+  const { t } = useTranslation();
 
   const handleAddTodo = () => {
     if (todoText.trim()) {
@@ -20,14 +22,14 @@ export const TodoInput: React.FC<TodoInputProps> = ({ onAddTodo }) => {
     <View style={styles.inputContainer}>
       <TextInput
         style={styles.input}
-        placeholder="Yeni görev ekle..."
+        placeholder={t('add_new_task_placeholder')}
         value={todoText}
         onChangeText={setTodoText}
         onSubmitEditing={handleAddTodo}
         returnKeyType="done"
       />
       <TouchableOpacity style={styles.addButton} onPress={handleAddTodo}>
-        <Text style={styles.addButtonText}>Ekle</Text>
+        <Text style={styles.addButtonText}>{t('add')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -53,7 +55,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     padding: 15,
-    backgroundColor: "#007BFF", // Mavi ekle butonu
+    backgroundColor: "#007BFF", 
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",

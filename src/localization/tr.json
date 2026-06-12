@@ -1,0 +1,16 @@
+{
+  "hello": "Merhaba",
+  "welcome": "Uygulamaya hoş geldiniz!",
+  "section_delete_title": "Bölümü Sil",
+  "section_delete_message": "\"{{sectionTitle}}\" bölümünü ve içerisindeki tüm görevleri silmek istediğinize emin misiniz?",
+  "cancel": "İptal",
+  "delete": "Sil",
+  "my_tasks": "Görevlerim",
+  "add_new_section": "Yeni Bölüm Ekle",
+  "section_title_placeholder": "Bölüm Başlığı",
+  "add": "Ekle",
+  "filter_all": "Tümü",
+  "filter_active": "Aktif",
+  "filter_completed": "Tamamlanan",
+  "add_new_task_placeholder": "Yeni görev ekle..."
+}

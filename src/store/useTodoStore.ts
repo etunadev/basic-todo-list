@@ -22,21 +22,19 @@ enum Filter {
 
 interface TodoStore {
   sections: TodoSection[];
-  filter: Filter;
   addSection: (title: string) => void;
   deleteSection: (sectionId: string) => void;
   addTodo: (sectionId: string, text: string) => void;
   deleteTodo: (sectionId: string, todoId: string) => void;
   toggleTodo: (sectionId: string, todoId: string) => void;
-  setFilter: (filter: Filter) => void;
-  getFilteredTodos: (sectionId: string) => Todo[];
+  // getFilteredTodos artık hangi filtreye göre çalışacağını dışarıdan parametre olarak alıyor
+  getFilteredTodos: (sectionId: string, filter: Filter) => Todo[];
 }
 
 const useTodoStore = create<TodoStore>()(
   persist(
     (set, get) => ({
       sections: [],
-      filter: Filter.All,
       addSection: (title) =>
         set((state) => ({
           sections: [...state.sections, { id: Date.now().toString(), title, todos: [] }],
@@ -80,9 +78,10 @@ const useTodoStore = create<TodoStore>()(
               : section
           ),
         })),
-      setFilter: (filter) => set({ filter }),
-      getFilteredTodos: (sectionId) => {
-        const { sections, filter } = get();
+      
+      // Store kendi global filtresine bakmıyor, bileşenden gelen 'filter' değerini kullanıyor
+      getFilteredTodos: (sectionId, filter) => {
+        const { sections } = get();
         const section = sections.find((s) => s.id === sectionId);
         if (!section) return [];
 

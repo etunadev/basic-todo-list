@@ -1,0 +1,16 @@
+{
+  "hello": "Hello",
+  "welcome": "Welcome to the app!",
+  "section_delete_title": "Delete Section",
+  "section_delete_message": "Are you sure you want to delete the \"{{sectionTitle}}\" section and all its tasks?",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "my_tasks": "My Tasks",
+  "add_new_section": "Add New Section",
+  "section_title_placeholder": "Section Title",
+  "add": "Add",
+  "filter_all": "All",
+  "filter_active": "Active",
+  "filter_completed": "Completed",
+  "add_new_task_placeholder": "Add a new task..."
+}
